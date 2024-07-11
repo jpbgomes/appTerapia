@@ -29,7 +29,5 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     alignSelf: 'center',
     width: '90%',
-    // height: '100%',
-    // backgroundColor: 'green',
   },
 });

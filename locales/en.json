@@ -1,0 +1,10 @@
+{
+  "login": "Login",
+  "login_prompt": "Login to continue using the application",
+  "email": "Email",
+  "enter_email": "Enter your email",
+  "password": "Password",
+  "enter_password": "Enter your password",
+  "recover_password": "Recover Password",
+  "login_button": "Login"
+}
