@@ -7,14 +7,13 @@ import { SmallLogo } from '@/components/SmallLogo';
 import { Overlay } from '@rneui/themed';
 
 import { NavigationProp, useNavigation } from '@react-navigation/native';
-import { RootStackParamList } from '../../navigation';
+import { RootStackParamList } from '../navigation';
 
-import enTranslations from '../../locales/en.json';
-import ptTranslations from '../../locales/pt.json';
+import enTranslations from '../locales/en.json';
+import ptTranslations from '../locales/pt.json';
 
-export default function TabTwoScreen() {
+export default function Login() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-
 
   const [locale, setLocale] = useState('pt');
   const translations = locale === 'en' ? enTranslations : ptTranslations;
@@ -75,7 +74,7 @@ export default function TabTwoScreen() {
         </View>
       </View>
 
-      <TouchableOpacity style={styles.passwordRecoveryLink}>
+      <TouchableOpacity style={styles.passwordRecoveryLink} onPress={() => navigation.navigate('forgot')}>
         <Text style={styles.passwordRecoveryText}>{translations.recover_password}</Text>
       </TouchableOpacity>
 
@@ -189,6 +188,7 @@ const styles = StyleSheet.create({
   passwordRecoveryText: {
     color: Colors.blue.normal,
     fontSize: 16,
+    textAlign: 'center',
   },
 
   loginButton: {

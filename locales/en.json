@@ -1,11 +1,20 @@
 {
   "login": "Login",
-  "login_prompt": "Login to continue using the application",
+  "login_prompt": "Faça login para continuar a usar a aplicação",
   "email": "Email",
-  "enter_email": "Enter your email",
+  "enter_email": "Introduz o email",
   "password": "Password",
-  "enter_password": "Enter your password",
-  "recover_password": "Recover Password",
+  "enter_password": "Introduz a password",
+  "recover_password": "Recuperar Password",
   "login_button": "Login",
-  "create_account": "MUDAR ISTO"
+  "create_account": "Ainda não tens uma conta? Cria uma!",
+  "register": "register",
+  "register_prompt": "Faça register para continuar a usar a aplicação",
+  "name": "Nome",
+  "enter_name": "Introduz o nome",
+  "phone": "Contacto",
+  "enter_phone": "Introduz o contacto",
+  "terms_link": "Ao registar aceita os nossos termos de serviço, clique para saber mais",
+  "register_button": "register",
+  "have_account": "Ainda não tens uma conta? Cria uma!"
 }

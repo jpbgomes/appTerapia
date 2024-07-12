@@ -29,5 +29,6 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     alignSelf: 'center',
     width: '90%',
+    paddingBottom: 20,
   },
 });

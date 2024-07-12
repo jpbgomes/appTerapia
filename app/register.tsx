@@ -7,12 +7,12 @@ import { SmallLogo } from '@/components/SmallLogo';
 import { Overlay } from '@rneui/themed';
 
 import { NavigationProp, useNavigation } from '@react-navigation/native';
-import { RootStackParamList } from '../../navigation';
+import { RootStackParamList } from '../navigation';
 
-import enTranslations from '../../locales/en.json';
-import ptTranslations from '../../locales/pt.json';
+import enTranslations from '../locales/en.json';
+import ptTranslations from '../locales/pt.json';
 
-export default function TabTwoScreen() {
+export default function Register() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   const [locale, setLocale] = useState('pt');
@@ -55,8 +55,18 @@ export default function TabTwoScreen() {
       <SmallLogo size={100} style={styles.logoIcon} />
 
       <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>{translations.login}</Text>
-        <Text style={styles.sectionSubtitle}>{translations.login_prompt}</Text>
+        <Text style={styles.sectionTitle}>{translations.register}</Text>
+        <Text style={styles.sectionSubtitle}>{translations.register_prompt}</Text>
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>{translations.name}</Text>
+        <TextInput style={styles.inputField} placeholder={translations.enter_name} />
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>{translations.phone}</Text>
+        <TextInput style={styles.inputField} placeholder={translations.enter_phone} />
       </View>
 
       <View style={styles.inputContainer}>
@@ -74,16 +84,26 @@ export default function TabTwoScreen() {
         </View>
       </View>
 
-      <TouchableOpacity style={styles.passwordRecoveryLink}>
-        <Text style={styles.passwordRecoveryText}>{translations.recover_password}</Text>
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>{translations.password}</Text>
+        <View style={styles.passwordInput}>
+          <TextInput style={styles.inputFieldPassword} placeholder={translations.enter_password} />
+          <TouchableOpacity style={styles.visibilityToggle}>
+            <TabBarIcon name='eye' style={styles.visibilityIcon} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <TouchableOpacity style={styles.termsLink}>
+        <Text style={styles.termsText}>{translations.terms_link}</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.loginButton}>
-        <Text style={styles.loginButtonText}>{translations.login_button}</Text>
+      <TouchableOpacity style={styles.registerButton}>
+        <Text style={styles.registerButtonText}>{translations.register_button}</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.createAccountButton} onPress={() => navigation.navigate('register')}>
-        <Text style={styles.createAccountText}>{translations.create_account}</Text>
+      <TouchableOpacity style={styles.haveAccountButton} onPress={() => navigation.navigate('login')}>
+        <Text style={styles.haveAccountText}>{translations.have_account}</Text>
       </TouchableOpacity>
     </AppLayout>
   );
@@ -181,16 +201,17 @@ const styles = StyleSheet.create({
     color: Colors.gray.medium,
   },
 
-  passwordRecoveryLink: {
+  termsLink: {
     marginTop: 10,
     alignItems: 'center',
   },
-  passwordRecoveryText: {
+  termsText: {
     color: Colors.blue.normal,
     fontSize: 16,
+    textAlign: 'center',
   },
 
-  loginButton: {
+  registerButton: {
     backgroundColor: Colors.blue.normal,
     alignItems: 'center',
     justifyContent: 'center',
@@ -199,7 +220,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginHorizontal: 20,
   },
-  loginButtonText: {
+  registerButtonText: {
     color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
@@ -224,11 +245,11 @@ const styles = StyleSheet.create({
     color: Colors.blue.normal,
   },
 
-  createAccountButton: {
+  haveAccountButton: {
     marginTop: 30,
     alignItems: 'center',
   },
-  createAccountText: {
+  haveAccountText: {
     color: Colors.gray.normal,
     fontSize: 16,
   },

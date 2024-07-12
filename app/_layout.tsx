@@ -1,14 +1,34 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import React, { useEffect } from 'react';
+import { createStackNavigator } from '@react-navigation/stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
+import HomeScreen from './home';
+import LoginScreen from './login';
+import RegisterScreen from './register';
+import ForgotScreen from './forgot';
+import { TabBarIcon } from '@/components/navigation/TabBarIcon';
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
+
+const Stack = createStackNavigator();
+const Tab = createBottomTabNavigator();
+
+function LoginStack() {
+  return (
+    <Stack.Navigator
+      initialRouteName="loginRaw"
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <Stack.Screen name="loginRaw" component={LoginScreen} />
+      <Stack.Screen name="forgot" component={ForgotScreen} />
+    </Stack.Navigator>
+  );
+}
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -27,11 +47,37 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-    </ThemeProvider>
+    <Tab.Navigator screenOptions={{ headerShown: false }}>
+      <Tab.Screen
+        name="home"
+        component={HomeScreen}
+        options={{
+          tabBarLabel: 'Home',
+          tabBarIcon: ({ color, size }) => (
+            <TabBarIcon name="home-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="login"
+        component={LoginStack}
+        options={{
+          tabBarLabel: 'Login',
+          tabBarIcon: ({ color, size }) => (
+            <TabBarIcon name="log-in-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="register"
+        component={RegisterScreen}
+        options={{
+          tabBarLabel: 'Register',
+          tabBarIcon: ({ color, size }) => (
+            <TabBarIcon name="person-add-outline" size={size} color={color} />
+          ),
+        }}
+      />
+    </Tab.Navigator>
   );
 }
