@@ -15,6 +15,7 @@ import ptTranslations from '../../locales/pt.json';
 export default function TabTwoScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
+
   const [locale, setLocale] = useState('pt');
   const translations = locale === 'en' ? enTranslations : ptTranslations;
 

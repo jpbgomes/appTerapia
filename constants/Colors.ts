@@ -25,6 +25,7 @@ export const Colors = {
   },
   gray: {
     light: '#edf1f7',
+    normal: 'rgb(85, 85, 85)',
     medium: 'rgba(100, 100, 100, 1.0)',
   },
   blue: {

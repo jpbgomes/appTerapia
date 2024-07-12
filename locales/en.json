@@ -6,5 +6,6 @@
   "password": "Password",
   "enter_password": "Enter your password",
   "recover_password": "Recover Password",
-  "login_button": "Login"
+  "login_button": "Login",
+  "create_account": "MUDAR ISTO"
 }

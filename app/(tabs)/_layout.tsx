@@ -11,9 +11,19 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: Colors.blue.normal,
         headerShown: false,
       }}>
+
+      <Tabs.Screen
+        name="home"
+        options={{
+          title: 'Home',
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name={focused ? 'home' : 'home-outline'} color={color} />
+          ),
+        }}
+      />
 
       <Tabs.Screen
         name="login"
@@ -26,11 +36,11 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="index"
+        name="register"
         options={{
-          title: 'Home',
+          title: 'Register',
           tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'home' : 'home-outline'} color={color} />
+            <TabBarIcon name={focused ? 'save' : 'save-outline'} color={color} />
           ),
         }}
       />
