@@ -19,6 +19,9 @@ export default function Register() {
   const translations = locale === 'en' ? enTranslations : ptTranslations;
 
   const [visible, setVisible] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+
 
   const toggleOverlay = () => {
     setVisible(!visible);
@@ -77,9 +80,16 @@ export default function Register() {
       <View style={styles.inputContainer}>
         <Text style={styles.inputLabel}>{translations.password}</Text>
         <View style={styles.passwordInput}>
-          <TextInput style={styles.inputFieldPassword} placeholder={translations.enter_password} />
-          <TouchableOpacity style={styles.visibilityToggle}>
-            <TabBarIcon name='eye' style={styles.visibilityIcon} />
+          <TextInput
+            style={styles.inputFieldPassword}
+            placeholder={translations.enter_password}
+            secureTextEntry={!passwordVisible}
+          />
+          <TouchableOpacity
+            style={styles.visibilityToggle}
+            onPress={() => setPasswordVisible(!passwordVisible)}
+          >
+            <TabBarIcon name={passwordVisible ? 'eye-off' : 'eye'} style={styles.visibilityIcon} />
           </TouchableOpacity>
         </View>
       </View>
@@ -87,9 +97,16 @@ export default function Register() {
       <View style={styles.inputContainer}>
         <Text style={styles.inputLabel}>{translations.password}</Text>
         <View style={styles.passwordInput}>
-          <TextInput style={styles.inputFieldPassword} placeholder={translations.enter_password} />
-          <TouchableOpacity style={styles.visibilityToggle}>
-            <TabBarIcon name='eye' style={styles.visibilityIcon} />
+          <TextInput
+            style={styles.inputFieldPassword}
+            placeholder={translations.enter_password}
+            secureTextEntry={!confirmPasswordVisible}
+          />
+          <TouchableOpacity
+            style={styles.visibilityToggle}
+            onPress={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
+          >
+            <TabBarIcon name={confirmPasswordVisible ? 'eye-off' : 'eye'} style={styles.visibilityIcon} />
           </TouchableOpacity>
         </View>
       </View>

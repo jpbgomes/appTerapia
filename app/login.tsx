@@ -19,6 +19,7 @@ export default function Login() {
   const translations = locale === 'en' ? enTranslations : ptTranslations;
 
   const [visible, setVisible] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
 
   const toggleOverlay = () => {
     setVisible(!visible);
@@ -27,6 +28,10 @@ export default function Login() {
   const handleLanguageChange = (selectedLocale: string) => {
     setLocale(selectedLocale);
     toggleOverlay();
+  };
+
+  const togglePasswordVisibility = () => {
+    setPasswordVisible(!passwordVisible);
   };
 
   return (
@@ -67,9 +72,13 @@ export default function Login() {
       <View style={styles.inputContainer}>
         <Text style={styles.inputLabel}>{translations.password}</Text>
         <View style={styles.passwordInput}>
-          <TextInput style={styles.inputFieldPassword} placeholder={translations.enter_password} />
-          <TouchableOpacity style={styles.visibilityToggle}>
-            <TabBarIcon name='eye' style={styles.visibilityIcon} />
+          <TextInput
+            style={styles.inputFieldPassword}
+            placeholder={translations.enter_password}
+            secureTextEntry={!passwordVisible}
+          />
+          <TouchableOpacity style={styles.visibilityToggle} onPress={togglePasswordVisibility}>
+            <TabBarIcon name={passwordVisible ? 'eye-off' : 'eye'} style={styles.visibilityIcon} />
           </TouchableOpacity>
         </View>
       </View>
