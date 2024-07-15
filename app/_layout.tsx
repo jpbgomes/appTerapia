@@ -9,6 +9,7 @@ import HomeScreen from './home';
 import LoginScreen from './login';
 import RegisterScreen from './register';
 import ForgotScreen from './forgot';
+import TermsScreen from './terms';
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
 
 SplashScreen.preventAutoHideAsync();
@@ -26,6 +27,20 @@ function LoginStack() {
     >
       <Stack.Screen name="loginRaw" component={LoginScreen} />
       <Stack.Screen name="forgot" component={ForgotScreen} />
+    </Stack.Navigator>
+  );
+}
+
+function RegisterStack() {
+  return (
+    <Stack.Navigator
+      initialRouteName="registerRaw"
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <Stack.Screen name="registerRaw" component={RegisterScreen} />
+      <Stack.Screen name="terms" component={TermsScreen} />
     </Stack.Navigator>
   );
 }
@@ -70,7 +85,7 @@ export default function RootLayout() {
       />
       <Tab.Screen
         name="register"
-        component={RegisterScreen}
+        component={RegisterStack}
         options={{
           tabBarLabel: 'Register',
           tabBarIcon: ({ color, size }) => (

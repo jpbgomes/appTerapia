@@ -94,7 +94,7 @@ export default function Register() {
         </View>
       </View>
 
-      <TouchableOpacity style={styles.termsLink}>
+      <TouchableOpacity style={styles.termsLink} onPress={() => navigation.navigate('terms')}>
         <Text style={styles.termsText}>{translations.terms_link}</Text>
       </TouchableOpacity>
 

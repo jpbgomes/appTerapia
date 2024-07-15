@@ -7,7 +7,7 @@
   "enter_password": "Introduz a password",
   "recover_password": "Recuperar Password",
   "login_button": "Login",
-  "create_account": "Ainda não tens uma conta? Cria uma!",
+  "create_account": "Ainda não tens uma conta? Cria uma",
   "register": "register",
   "register_prompt": "Faça register para continuar a usar a aplicação",
   "name": "Nome",
@@ -16,5 +16,5 @@
   "enter_phone": "Introduz o contacto",
   "terms_link": "Ao registar aceita os nossos termos de serviço, clique para saber mais",
   "register_button": "register",
-  "have_account": "Ainda não tens uma conta? Cria uma!"
+  "have_account": "Ainda não tens uma conta? Cria uma"
 }
