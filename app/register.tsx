@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { AppLayout } from '@/layouts/app';
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
 import { Colors } from '@/constants/Colors';
@@ -12,6 +12,10 @@ import { RootStackParamList } from '../navigation';
 import enTranslations from '../locales/en.json';
 import ptTranslations from '../locales/pt.json';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { baseUrl } from '@/setup';
+import axios from 'axios';
+
 export default function Register() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
@@ -21,7 +25,29 @@ export default function Register() {
   const [visible, setVisible] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [token, setToken] = useState('');
+
+  useEffect(() => {
+    const checkToken = async () => {
+      const authToken = await AsyncStorage.getItem('authToken');
+      if (authToken) {
+        setToken(authToken);
+        navigation.navigate('home');
+      }
+    };
+
+    const tokenCheckInterval = setInterval(checkToken, 1000);
+
+    return () => clearInterval(tokenCheckInterval);
+  }, []);
 
   const toggleOverlay = () => {
     setVisible(!visible);
@@ -31,6 +57,59 @@ export default function Register() {
     setLocale(selectedLocale);
     toggleOverlay();
   };
+
+  const handleRegister = async () => {
+    if (loading) return;
+
+    try {
+      setLoading(true);
+
+      const userData = {
+        name: name,
+        phone: phone,
+        email: email,
+        password: password,
+        password_confirmation: confirmPassword,
+        locale: locale,
+      };
+
+      const response = await axios.post(`${baseUrl}/register`, userData, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      });
+
+      setName('');
+      setPhone('');
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
+
+      navigation.navigate('login');
+    } catch (error: any) {
+      if (error.response) {
+        const status = error.response.status;
+        const data = error.response.data;
+
+        const errorMessage = data.errorMessage;
+
+        if (status === 422 && errorMessage) {
+          setErrorMessage(errorMessage);
+        } else {
+          setErrorMessage(translations.generic_error);
+        }
+      } else {
+        setErrorMessage(translations.network_error);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (token && token == "" && token == null) {
+    return null;
+  }
 
   return (
     <AppLayout>
@@ -64,17 +143,32 @@ export default function Register() {
 
       <View style={styles.inputContainer}>
         <Text style={styles.inputLabel}>{translations.name}</Text>
-        <TextInput style={styles.inputField} placeholder={translations.enter_name} />
+        <TextInput
+          style={styles.inputField}
+          placeholder={translations.enter_name}
+          value={name}
+          onChangeText={setName}
+        />
       </View>
 
       <View style={styles.inputContainer}>
         <Text style={styles.inputLabel}>{translations.phone}</Text>
-        <TextInput style={styles.inputField} placeholder={translations.enter_phone} />
+        <TextInput
+          style={styles.inputField}
+          placeholder={translations.enter_phone}
+          value={phone}
+          onChangeText={setPhone}
+        />
       </View>
 
       <View style={styles.inputContainer}>
         <Text style={styles.inputLabel}>{translations.email}</Text>
-        <TextInput style={styles.inputField} placeholder={translations.enter_email} />
+        <TextInput
+          style={styles.inputField}
+          placeholder={translations.enter_email}
+          value={email}
+          onChangeText={setEmail}
+        />
       </View>
 
       <View style={styles.inputContainer}>
@@ -84,6 +178,8 @@ export default function Register() {
             style={styles.inputFieldPassword}
             placeholder={translations.enter_password}
             secureTextEntry={!passwordVisible}
+            value={password}
+            onChangeText={setPassword}
           />
           <TouchableOpacity
             style={styles.visibilityToggle}
@@ -101,6 +197,8 @@ export default function Register() {
             style={styles.inputFieldPassword}
             placeholder={translations.enter_password}
             secureTextEntry={!confirmPasswordVisible}
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
           />
           <TouchableOpacity
             style={styles.visibilityToggle}
@@ -115,9 +213,15 @@ export default function Register() {
         <Text style={styles.termsText}>{translations.terms_link}</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.registerButton}>
-        <Text style={styles.registerButtonText}>{translations.register_button}</Text>
+      <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
+        {loading ? (
+          <ActivityIndicator size="small" color="#ffffff" />
+        ) : (
+          <Text style={styles.registerButtonText}>{translations.register_button}</Text>
+        )}
       </TouchableOpacity>
+
+      {errorMessage ? <Text style={styles.errorMessage}>{errorMessage}</Text> : null}
 
       <TouchableOpacity style={styles.haveAccountButton} onPress={() => navigation.navigate('login')}>
         <Text style={styles.haveAccountText}>{translations.have_account}</Text>
@@ -269,5 +373,11 @@ const styles = StyleSheet.create({
   haveAccountText: {
     color: Colors.gray.normal,
     fontSize: 16,
+  },
+
+  errorMessage: {
+    color: 'red',
+    textAlign: 'center',
+    marginTop: 10,
   },
 });

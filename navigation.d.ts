@@ -3,4 +3,5 @@ export type RootStackParamList = {
   login: undefined;
   register: undefined;
   forgot: undefined;
+  terms: undefined;
 };

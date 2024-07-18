@@ -1,8 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import HomeScreen from './home';
@@ -11,6 +13,7 @@ import RegisterScreen from './register';
 import ForgotScreen from './forgot';
 import TermsScreen from './terms';
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
+import { baseUrl } from '@/setup';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -51,15 +54,48 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
+  const [tokenExists, setTokenExists] = useState(false);
 
-  if (!loaded) {
-    return null;
-  }
+  useEffect(() => {
+    const checkTokenExistence = async () => {
+      try {
+        const token = await AsyncStorage.getItem('authToken');
+        setTokenExists(token !== null);
+      } catch (error) {
+        console.error('Error checking token existence:', error);
+        setTokenExists(false);
+      }
+    };
+
+    const checkTokenValidity = async () => {
+      try {
+        const token = await AsyncStorage.getItem('authToken');
+
+        if (token) {
+          const response = await axios.get(`${baseUrl}/user/check-token`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          });
+
+          setTokenExists(true);
+        }
+      } catch (error: any) {
+        setTokenExists(false);
+      }
+    };
+
+    const intervalTokenExistence = setInterval(checkTokenExistence, 1000);
+    const intervalTokenValidity = setInterval(checkTokenValidity, 10000);
+
+    checkTokenExistence();
+    checkTokenValidity();
+
+    return () => {
+      clearInterval(intervalTokenExistence);
+      clearInterval(intervalTokenValidity);
+    };
+  }, []);
 
   return (
     <Tab.Navigator screenOptions={{ headerShown: false }}>
@@ -73,26 +109,30 @@ export default function RootLayout() {
           ),
         }}
       />
-      <Tab.Screen
-        name="login"
-        component={LoginStack}
-        options={{
-          tabBarLabel: 'Login',
-          tabBarIcon: ({ color, size }) => (
-            <TabBarIcon name="log-in-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="register"
-        component={RegisterStack}
-        options={{
-          tabBarLabel: 'Register',
-          tabBarIcon: ({ color, size }) => (
-            <TabBarIcon name="person-add-outline" size={size} color={color} />
-          ),
-        }}
-      />
+      {!tokenExists && (
+        <Tab.Screen
+          name="login"
+          component={LoginStack}
+          options={{
+            tabBarLabel: 'Login',
+            tabBarIcon: ({ color, size }) => (
+              <TabBarIcon name="log-in-outline" size={size} color={color} />
+            ),
+          }}
+        />
+      )}
+      {!tokenExists && (
+        <Tab.Screen
+          name="register"
+          component={RegisterStack}
+          options={{
+            tabBarLabel: 'Register',
+            tabBarIcon: ({ color, size }) => (
+              <TabBarIcon name="person-add-outline" size={size} color={color} />
+            ),
+          }}
+        />
+      )}
     </Tab.Navigator>
   );
 }

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { AppLayout } from '@/layouts/app';
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
 import { Colors } from '@/constants/Colors';
@@ -12,6 +12,10 @@ import { RootStackParamList } from '../navigation';
 import enTranslations from '../locales/en.json';
 import ptTranslations from '../locales/pt.json';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import { baseUrl } from '@/setup';
+
 export default function Login() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
@@ -20,6 +24,26 @@ export default function Login() {
 
   const [visible, setVisible] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [token, setToken] = useState('');
+
+  useEffect(() => {
+    const checkToken = async () => {
+      const authToken = await AsyncStorage.getItem('authToken');
+      if (authToken) {
+        setToken(authToken);
+        navigation.navigate('home');
+      }
+    };
+
+    const tokenCheckInterval = setInterval(checkToken, 1000);
+
+    return () => clearInterval(tokenCheckInterval);
+  }, []);
 
   const toggleOverlay = () => {
     setVisible(!visible);
@@ -33,6 +57,54 @@ export default function Login() {
   const togglePasswordVisibility = () => {
     setPasswordVisible(!passwordVisible);
   };
+
+  const handleLogin = async () => {
+    if (loading) return;
+
+    try {
+      setLoading(true);
+
+      const userData = {
+        email: email,
+        password: password,
+        locale: locale,
+      };
+
+      const response = await axios.post(`${baseUrl}/login`, userData, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log(response.data)
+      await AsyncStorage.setItem('authToken', response.data.token);
+      setToken(response.data.token);
+      navigation.navigate('home');
+    } catch (error: any) {
+      console.log(error);
+      if (error.response) {
+        const status = error.response.status;
+        const data = error.response.data;
+
+        const errorMessage = data.errorMessage;
+
+        if (status === 422 && errorMessage) {
+          setErrorMessage(errorMessage);
+        } else {
+          setErrorMessage(translations.generic_error);
+        }
+      } else {
+        setErrorMessage(translations.network_error);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (token && token == "" && token == null) {
+    return null;
+  }
 
   return (
     <AppLayout>
@@ -66,7 +138,7 @@ export default function Login() {
 
       <View style={styles.inputContainer}>
         <Text style={styles.inputLabel}>{translations.email}</Text>
-        <TextInput style={styles.inputField} placeholder={translations.enter_email} />
+        <TextInput style={styles.inputField} placeholder={translations.enter_email} value={email} onChangeText={setEmail} />
       </View>
 
       <View style={styles.inputContainer}>
@@ -76,6 +148,8 @@ export default function Login() {
             style={styles.inputFieldPassword}
             placeholder={translations.enter_password}
             secureTextEntry={!passwordVisible}
+            value={password}
+            onChangeText={setPassword}
           />
           <TouchableOpacity style={styles.visibilityToggle} onPress={togglePasswordVisibility}>
             <TabBarIcon name={passwordVisible ? 'eye-off' : 'eye'} style={styles.visibilityIcon} />
@@ -87,9 +161,15 @@ export default function Login() {
         <Text style={styles.passwordRecoveryText}>{translations.recover_password}</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.loginButton}>
-        <Text style={styles.loginButtonText}>{translations.login_button}</Text>
+      <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+        {loading ? (
+          <ActivityIndicator size="small" color="#ffffff" />
+        ) : (
+          <Text style={styles.loginButtonText}>{translations.login_button}</Text>
+        )}
       </TouchableOpacity>
+
+      {errorMessage ? <Text style={styles.errorMessage}>{errorMessage}</Text> : null}
 
       <TouchableOpacity style={styles.createAccountButton} onPress={() => navigation.navigate('register')}>
         <Text style={styles.createAccountText}>{translations.create_account}</Text>
@@ -232,6 +312,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: Colors.blue.normal,
+  },
+
+  errorMessage: {
+    color: 'red',
+    textAlign: 'center',
+    marginTop: 10,
   },
 
   createAccountButton: {
