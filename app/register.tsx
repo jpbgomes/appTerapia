@@ -107,10 +107,6 @@ export default function Register() {
     }
   };
 
-  if (token && token == "" && token == null) {
-    return null;
-  }
-
   return (
     <AppLayout>
       <Overlay isVisible={visible} onBackdropPress={toggleOverlay} overlayStyle={styles.overlayMainContainer}>

@@ -77,12 +77,10 @@ export default function Login() {
         },
       });
 
-      console.log(response.data)
       await AsyncStorage.setItem('authToken', response.data.token);
       setToken(response.data.token);
       navigation.navigate('home');
     } catch (error: any) {
-      console.log(error);
       if (error.response) {
         const status = error.response.status;
         const data = error.response.data;
@@ -101,10 +99,6 @@ export default function Login() {
       setLoading(false);
     }
   };
-
-  if (token && token == "" && token == null) {
-    return null;
-  }
 
   return (
     <AppLayout>

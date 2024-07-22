@@ -15,8 +15,6 @@ import TermsScreen from './terms';
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
 import { baseUrl } from '@/setup';
 
-SplashScreen.preventAutoHideAsync();
-
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -60,9 +58,23 @@ export default function RootLayout() {
     const checkTokenExistence = async () => {
       try {
         const token = await AsyncStorage.getItem('authToken');
-        setTokenExists(token !== null);
+
+        if (token) {
+          const response = await axios.get(`${baseUrl}/user/check-token`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          });
+
+          if (response.data.success) {
+            setTokenExists(true);
+          } else {
+            setTokenExists(false);
+          }
+        } else {
+          setTokenExists(false);
+        }
       } catch (error) {
-        console.error('Error checking token existence:', error);
         setTokenExists(false);
       }
     };
@@ -78,22 +90,51 @@ export default function RootLayout() {
             },
           });
 
-          setTokenExists(true);
+          if (response.data.success) {
+            setTokenExists(true);
+          } else {
+            setTokenExists(false);
+          }
         }
-      } catch (error: any) {
+      } catch (error) {
         setTokenExists(false);
+      }
+    };
+
+    const checkEmailVerification = async () => {
+      try {
+        const token = await AsyncStorage.getItem('authToken');
+
+        if (token) {
+          const response = await axios.get(`${baseUrl}/user/check-email`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          });
+
+          if (response.data.success) {
+            await AsyncStorage.setItem('emailVerified', JSON.stringify(true));
+          } else {
+            await AsyncStorage.setItem('emailVerified', JSON.stringify(false));
+          }
+        }
+      } catch (error) {
+        await AsyncStorage.setItem('emailVerified', JSON.stringify(false));
       }
     };
 
     const intervalTokenExistence = setInterval(checkTokenExistence, 1000);
     const intervalTokenValidity = setInterval(checkTokenValidity, 10000);
+    const intervalEmailVerification = setInterval(checkEmailVerification, 5000);
 
     checkTokenExistence();
     checkTokenValidity();
+    checkEmailVerification();
 
     return () => {
       clearInterval(intervalTokenExistence);
       clearInterval(intervalTokenValidity);
+      clearInterval(intervalEmailVerification);
     };
   }, []);
 
@@ -109,30 +150,32 @@ export default function RootLayout() {
           ),
         }}
       />
+
       {!tokenExists && (
-        <Tab.Screen
-          name="login"
-          component={LoginStack}
-          options={{
-            tabBarLabel: 'Login',
-            tabBarIcon: ({ color, size }) => (
-              <TabBarIcon name="log-in-outline" size={size} color={color} />
-            ),
-          }}
-        />
+        <>
+          <Tab.Screen
+            name="login"
+            component={LoginStack}
+            options={{
+              tabBarLabel: 'Login',
+              tabBarIcon: ({ color, size }) => (
+                <TabBarIcon name="log-in-outline" size={size} color={color} />
+              ),
+            }}
+          />
+          <Tab.Screen
+            name="register"
+            component={RegisterStack}
+            options={{
+              tabBarLabel: 'Register',
+              tabBarIcon: ({ color, size }) => (
+                <TabBarIcon name="person-add-outline" size={size} color={color} />
+              ),
+            }}
+          />
+        </>
       )}
-      {!tokenExists && (
-        <Tab.Screen
-          name="register"
-          component={RegisterStack}
-          options={{
-            tabBarLabel: 'Register',
-            tabBarIcon: ({ color, size }) => (
-              <TabBarIcon name="person-add-outline" size={size} color={color} />
-            ),
-          }}
-        />
-      )}
+
     </Tab.Navigator>
   );
 }
