@@ -75,6 +75,7 @@ export default function RootLayout() {
           setTokenExists(false);
         }
       } catch (error) {
+        await AsyncStorage.removeItem('authToken');
         setTokenExists(false);
       }
     };
@@ -97,6 +98,7 @@ export default function RootLayout() {
           }
         }
       } catch (error) {
+        await AsyncStorage.removeItem('authToken');
         setTokenExists(false);
       }
     };
@@ -124,16 +126,13 @@ export default function RootLayout() {
     };
 
     const intervalTokenExistence = setInterval(checkTokenExistence, 1000);
-    const intervalTokenValidity = setInterval(checkTokenValidity, 10000);
     const intervalEmailVerification = setInterval(checkEmailVerification, 5000);
 
     checkTokenExistence();
-    checkTokenValidity();
     checkEmailVerification();
 
     return () => {
       clearInterval(intervalTokenExistence);
-      clearInterval(intervalTokenValidity);
       clearInterval(intervalEmailVerification);
     };
   }, []);

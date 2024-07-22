@@ -34,6 +34,7 @@ export default function Login() {
   useEffect(() => {
     const checkToken = async () => {
       const authToken = await AsyncStorage.getItem('authToken');
+
       if (authToken) {
         setToken(authToken);
         navigation.navigate('home');

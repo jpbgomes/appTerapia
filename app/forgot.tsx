@@ -71,7 +71,7 @@ export default function Forgot() {
         },
       });
 
-      Alert.alert(response.data.message);
+      setErrorMessage('');
       setSuccessMessage(response.data.message);
 
     } catch (error: any) {
