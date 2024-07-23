@@ -64,7 +64,7 @@ export default function Forgot() {
         locale: locale,
       };
 
-      const response = await axios.post(`${baseUrl}/resetPassword`, userData, {
+      const response = await axios.post(`${baseUrl}/api/resetPassword`, userData, {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',

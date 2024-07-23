@@ -73,7 +73,7 @@ export default function Register() {
         locale: locale,
       };
 
-      const response = await axios.post(`${baseUrl}/register`, userData, {
+      const response = await axios.post(`${baseUrl}/api/register`, userData, {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',

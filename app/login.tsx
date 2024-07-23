@@ -71,7 +71,7 @@ export default function Login() {
         locale: locale,
       };
 
-      const response = await axios.post(`${baseUrl}/login`, userData, {
+      const response = await axios.post(`${baseUrl}/api/login`, userData, {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
@@ -82,6 +82,7 @@ export default function Login() {
       setToken(response.data.token);
       navigation.navigate('home');
     } catch (error: any) {
+      console.log(error);
       if (error.response) {
         const status = error.response.status;
         const data = error.response.data;

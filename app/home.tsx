@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, Alert, FlatList, ScrollView } from 'react-native';
 import { AppLayout } from '@/layouts/app';
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
 import { Colors } from '@/constants/Colors';
@@ -14,6 +14,8 @@ import ptTranslations from '../locales/pt.json';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { baseUrl } from '@/setup';
 import axios from 'axios';
+import { Image } from 'react-native';
+
 
 export default function Home() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
@@ -29,6 +31,8 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+
+  const [scategories, setSCategories] = useState([]);
 
   const toggleOverlay = () => {
     setVisible(!visible);
@@ -60,6 +64,48 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    if (tokenExists && emailVerified) {
+      getServicesData();
+    }
+  }, [tokenExists, emailVerified]);
+
+  const getServicesData = async () => {
+    console.log("CALLED");
+    if (loading) return;
+
+    try {
+      setLoading(true);
+
+      const token = await AsyncStorage.getItem('authToken');
+
+      if (token) {
+        const response = await axios.get(`${baseUrl}/api/getServices`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        setSCategories(response.data.serviceCategories);
+        // console.log(response.data.serviceCategories);
+        // response.data.serviceCategories.forEach(category => {
+        //   console.log(`Category: ${category.name}`); // Assuming `name` is a property of ServiceCategory
+        //   console.log('Services:');
+        //   category.services.forEach(service => {
+        //     console.log(`- ${service.name}`); // Assuming `name` is a property of Service
+        //   });
+        // });
+      }
+    } catch (error) {
+      console.log('Error fetching services data:', error);
+      if (error.response) {
+        console.log('Response data:', error.response.data);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem('authToken');
@@ -79,7 +125,7 @@ export default function Home() {
         locale: locale,
       };
 
-      const response = await axios.post(`${baseUrl}/verifyEmail`, userData, {
+      const response = await axios.post(`${baseUrl}/api/verifyEmail`, userData, {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
@@ -153,9 +199,38 @@ export default function Home() {
               {successMessage ? <Text style={styles.successMessage}>{successMessage}</Text> : null}
             </>
           ) : (
-            <TouchableOpacity style={styles.homeButton}>
-              <Text style={styles.homeText}>MOSTRAR SERVIÇOS</Text>
-            </TouchableOpacity>
+            <>
+              <TouchableOpacity style={styles.homeButton} onPress={getServicesData}>
+                <Text style={styles.homeText}>MOSTRAR SERVIÇOS</Text>
+              </TouchableOpacity>
+
+              <ScrollView style={styles.scrollContainer}>
+                {scategories.length > 0 ? (
+                  scategories.map((category) => (
+                    <View key={category.id} style={styles.categoryContainer}>
+                      <View style={styles.subcategoryContainer}>
+                        <Image source={{ uri: `${baseUrl}/${category.image_path}` }} style={styles.categoryImage} />
+                        <Text style={styles.categoryName}>{translations[category.name]}</Text>
+                      </View>
+
+                      <View style={styles.serviceContainer}>
+                        {category.services && category.services.length > 0 ? (
+                          category.services.map((service) => (
+                            <View key={service.id} style={styles.serviceItem}>
+                              <Text style={styles.serviceName}>{translations[service.name]}</Text>
+                            </View>
+                          ))
+                        ) : (
+                          <Text style={styles.noServices}>No services available.</Text>
+                        )}
+                      </View>
+                    </View>
+                  ))
+                ) : (
+                  <Text style={styles.emptyMessage}>No service categories available.</Text>
+                )}
+              </ScrollView>
+            </>
           )
         ) : (
           <TouchableOpacity style={styles.homeButton} onPress={() => navigation.navigate('login')}>
@@ -207,9 +282,7 @@ const styles = StyleSheet.create({
     color: Colors.blue.normal,
   },
   homeContainer: {
-    // height: '100%',
-    // backgroundColor: 'red',
-    // flex: 1,
+
   },
   homeButton: {
     backgroundColor: Colors.blue.normal,
@@ -249,5 +322,49 @@ const styles = StyleSheet.create({
     color: 'green',
     textAlign: 'center',
     marginTop: 10,
+  },
+
+  // CATEGORIAS
+
+  scrollContainer: {
+    marginTop: 20,
+  },
+  categoryContainer: {
+    marginVertical: 10,
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.gray.light,
+    flexDirection: 'column',
+  },
+  subcategoryContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  categoryImage: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    marginBottom: 10,
+    backgroundColor: 'gray'
+  },
+  categoryName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  serviceItem: {
+    paddingVertical: 5,
+  },
+  serviceName: {
+    fontSize: 16,
+  },
+  noServices: {
+    fontSize: 14,
+    color: Colors.gray.medium,
+  },
+  emptyMessage: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: Colors.gray.medium,
   },
 });

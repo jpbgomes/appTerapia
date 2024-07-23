@@ -60,7 +60,7 @@ export default function RootLayout() {
         const token = await AsyncStorage.getItem('authToken');
 
         if (token) {
-          const response = await axios.get(`${baseUrl}/user/check-token`, {
+          const response = await axios.get(`${baseUrl}/api/user/check-token`, {
             headers: {
               'Authorization': `Bearer ${token}`,
             },
@@ -85,7 +85,7 @@ export default function RootLayout() {
         const token = await AsyncStorage.getItem('authToken');
 
         if (token) {
-          const response = await axios.get(`${baseUrl}/user/check-token`, {
+          const response = await axios.get(`${baseUrl}/api/user/check-token`, {
             headers: {
               'Authorization': `Bearer ${token}`,
             },
@@ -108,7 +108,7 @@ export default function RootLayout() {
         const token = await AsyncStorage.getItem('authToken');
 
         if (token) {
-          const response = await axios.get(`${baseUrl}/user/check-email`, {
+          const response = await axios.get(`${baseUrl}/api/user/check-email`, {
             headers: {
               'Authorization': `Bearer ${token}`,
             },
