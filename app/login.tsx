@@ -80,9 +80,10 @@ export default function Login() {
 
       await AsyncStorage.setItem('authToken', response.data.token);
       setToken(response.data.token);
+      checkEmailVerification();
+
       navigation.navigate('home');
     } catch (error: any) {
-      console.log(error);
       if (error.response) {
         const status = error.response.status;
         const data = error.response.data;
@@ -99,6 +100,28 @@ export default function Login() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkEmailVerification = async () => {
+    try {
+      const token = await AsyncStorage.getItem('authToken');
+
+      if (token) {
+        const response = await axios.get(`${baseUrl}/api/user/check-email`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (response.data.success) {
+          await AsyncStorage.setItem('emailVerified', JSON.stringify(true));
+        } else {
+          await AsyncStorage.setItem('emailVerified', JSON.stringify(false));
+        }
+      }
+    } catch (error) {
+      await AsyncStorage.setItem('emailVerified', JSON.stringify(false));
     }
   };
 

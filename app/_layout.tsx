@@ -69,33 +69,11 @@ export default function RootLayout() {
           if (response.data.success) {
             setTokenExists(true);
           } else {
+            await AsyncStorage.removeItem('authToken');
             setTokenExists(false);
           }
         } else {
           setTokenExists(false);
-        }
-      } catch (error) {
-        await AsyncStorage.removeItem('authToken');
-        setTokenExists(false);
-      }
-    };
-
-    const checkTokenValidity = async () => {
-      try {
-        const token = await AsyncStorage.getItem('authToken');
-
-        if (token) {
-          const response = await axios.get(`${baseUrl}/api/user/check-token`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
-          });
-
-          if (response.data.success) {
-            setTokenExists(true);
-          } else {
-            setTokenExists(false);
-          }
         }
       } catch (error) {
         await AsyncStorage.removeItem('authToken');

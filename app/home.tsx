@@ -47,6 +47,8 @@ export default function Home() {
     const checkAuthStatus = async () => {
       try {
         const token = await AsyncStorage.getItem('authToken');
+        console.log(token);
+
         setTokenExists(!!token);
         setTokenValue(token || '');
 
@@ -71,7 +73,6 @@ export default function Home() {
   }, [tokenExists, emailVerified]);
 
   const getServicesData = async () => {
-    console.log("CALLED");
     if (loading) return;
 
     try {
@@ -87,14 +88,6 @@ export default function Home() {
         });
 
         setSCategories(response.data.serviceCategories);
-        // console.log(response.data.serviceCategories);
-        // response.data.serviceCategories.forEach(category => {
-        //   console.log(`Category: ${category.name}`); // Assuming `name` is a property of ServiceCategory
-        //   console.log('Services:');
-        //   category.services.forEach(service => {
-        //     console.log(`- ${service.name}`); // Assuming `name` is a property of Service
-        //   });
-        // });
       }
     } catch (error) {
       console.log('Error fetching services data:', error);
@@ -192,7 +185,7 @@ export default function Home() {
           !emailVerified ? (
             <>
               <TouchableOpacity style={styles.homeButton} onPress={handleEmailVerificationAlert}>
-                <Text style={styles.homeText}>Verify Email</Text>
+                <Text style={styles.homeText}>{translations.verifyEmail}</Text>
               </TouchableOpacity>
 
               {errorMessage ? <Text style={styles.errorMessage}>{errorMessage}</Text> : null}
@@ -200,41 +193,43 @@ export default function Home() {
             </>
           ) : (
             <>
-              <TouchableOpacity style={styles.homeButton} onPress={getServicesData}>
-                <Text style={styles.homeText}>MOSTRAR SERVIÇOS</Text>
-              </TouchableOpacity>
-
               <ScrollView style={styles.scrollContainer}>
                 {scategories.length > 0 ? (
                   scategories.map((category) => (
                     <View key={category.id} style={styles.categoryContainer}>
                       <View style={styles.subcategoryContainer}>
-                        <Image source={{ uri: `${baseUrl}/${category.image_path}` }} style={styles.categoryImage} />
-                        <Text style={styles.categoryName}>{translations[category.name]}</Text>
+                        <Image
+                          source={{ uri: category.image_path ? `${baseUrl}/${category.image_path}` : `${baseUrl}/assets/unknown.jpg` }}
+                          style={styles.categoryImage}
+                        />
+                        <Text style={styles.categoryName}>
+                          {translations[category.name]}
+                        </Text>
                       </View>
+
 
                       <View style={styles.serviceContainer}>
                         {category.services && category.services.length > 0 ? (
-                          category.services.map((service) => (
+                          category.services.map((service: any) => (
                             <View key={service.id} style={styles.serviceItem}>
-                              <Text style={styles.serviceName}>{translations[service.name]}</Text>
+                              <Text style={styles.serviceName}>{translations[service.name] || service.name}</Text>
                             </View>
                           ))
                         ) : (
-                          <Text style={styles.noServices}>No services available.</Text>
+                          <Text style={styles.noServices}>{translations.noServices}</Text>
                         )}
                       </View>
                     </View>
                   ))
                 ) : (
-                  <Text style={styles.emptyMessage}>No service categories available.</Text>
+                  <Text style={styles.emptyMessage}>{translations.noCategories}</Text>
                 )}
               </ScrollView>
             </>
           )
         ) : (
           <TouchableOpacity style={styles.homeButton} onPress={() => navigation.navigate('login')}>
-            <Text style={styles.homeText}>DAR LOGIN</Text>
+            <Text style={styles.homeText}>{translations.login_button}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -291,7 +286,7 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 25,
     marginTop: 20,
-    marginHorizontal: 20,
+    marginHorizontal: 15,
   },
   homeText: {
     color: 'white',
@@ -335,10 +330,13 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.gray.light,
     flexDirection: 'column',
+    borderRadius: 25,
+    backgroundColor: Colors.gray.light
   },
   subcategoryContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 5,
   },
   categoryImage: {
@@ -352,11 +350,20 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
+  serviceContainer: {
+    marginTop: 10,
+    flexDirection: 'column',
+    gap: 10,
+  },
   serviceItem: {
-    paddingVertical: 5,
+    backgroundColor: Colors.blue.normal,
+    padding: 10,
+    borderRadius: 10,
   },
   serviceName: {
-    fontSize: 16,
+    color: 'white',
+    fontSize: 15,
+    fontWeight: 'bold',
   },
   noServices: {
     fontSize: 14,

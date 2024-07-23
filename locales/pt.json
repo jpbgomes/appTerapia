@@ -1,4 +1,7 @@
 {
+  "noServices": "Não há serviços disponíveis",
+  "noCategories": "Não há categorias disponíveis",
+  "verifyEmail": "Verificar Email",
   "return": "Retornar",
   "login": "Login",
   "login_prompt": "Faça login para continuar a usar a aplicação",
@@ -71,5 +74,5 @@
   "rehab_image_path": "/assets/services/special_rehabilitation.jpeg",
   "body_treat_title": "Tratamento corporal",
   "body_treat_desc": "Delicie-se com uma sessão de tratamento corporal rejuvenescedor",
-  "body_treat_image_path": "/assets/services/body_treatment.jpg",
+  "body_treat_image_path": "/assets/services/body_treatment.jpg"
 }
