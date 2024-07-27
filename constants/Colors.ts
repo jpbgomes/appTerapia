@@ -31,6 +31,6 @@ export const Colors = {
   blue: {
     light: '#f1f6ff',
     normal: '#0265ff',
-    medium: '#0230ff',
+    medium: 'rgba(0, 82, 255, 0.75)',
   }
 };

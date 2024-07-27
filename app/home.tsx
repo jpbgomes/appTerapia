@@ -211,9 +211,28 @@ export default function Home() {
                       <View style={styles.serviceContainer}>
                         {category.services && category.services.length > 0 ? (
                           category.services.map((service: any) => (
-                            <View key={service.id} style={styles.serviceItem}>
-                              <Text style={styles.serviceName}>{translations[service.name] || service.name}</Text>
-                            </View>
+                            <TouchableOpacity key={service.id} style={styles.serviceItem} onPress={() => navigation.navigate('confirm')}>
+                              <Text style={styles.serviceName}>
+                                {translations[service.name] || service.name}
+                              </Text>
+                              <Text style={styles.serviceDescription}>
+                                {translations[service.description] ||
+                                  service.description}
+                              </Text>
+
+                              <View style={styles.serviceDetails}>
+                                <View style={styles.servicePriceDuration}>
+                                  <Text style={styles.servicePrice}>
+                                    {translations[service.price] || service.price}€
+                                  </Text>
+
+                                  <Text style={styles.serviceDuration}>
+                                    {translations[service.duration] ||
+                                      service.duration} min
+                                  </Text>
+                                </View>
+                              </View>
+                            </TouchableOpacity>
                           ))
                         ) : (
                           <Text style={styles.noServices}>{translations.noServices}</Text>
@@ -325,7 +344,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   categoryContainer: {
-    marginVertical: 10,
+    marginVertical: 30,
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: Colors.gray.light,
@@ -353,17 +372,52 @@ const styles = StyleSheet.create({
   serviceContainer: {
     marginTop: 10,
     flexDirection: 'column',
-    gap: 10,
+    gap: 20,
   },
   serviceItem: {
-    backgroundColor: Colors.blue.normal,
+    backgroundColor: Colors.blue.medium,
     padding: 10,
-    borderRadius: 10,
+    borderRadius: 15,
   },
   serviceName: {
     color: 'white',
     fontSize: 15,
     fontWeight: 'bold',
+  },
+  serviceDescription: {
+    color: 'white',
+    fontSize: 12, // Smaller font size for the description
+    marginTop: 5,
+  },
+  serviceDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 5,
+  },
+  servicePriceDuration: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 5,
+  },
+  servicePrice: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginRight: 15,
+  },
+  serviceDuration: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  durationIcon: {
+    fontSize: 14,
+    color: 'white',
+    marginLeft: 5,
   },
   noServices: {
     fontSize: 14,

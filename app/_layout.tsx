@@ -11,12 +11,27 @@ import HomeScreen from './home';
 import LoginScreen from './login';
 import RegisterScreen from './register';
 import ForgotScreen from './forgot';
+import ConfirmScreen from './confirm';
 import TermsScreen from './terms';
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
 import { baseUrl } from '@/setup';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
+
+function HomeStack() {
+  return (
+    <Stack.Navigator
+      initialRouteName="homeRaw"
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <Stack.Screen name="homeRaw" component={HomeScreen} />
+      <Stack.Screen name="confirm" component={ConfirmScreen} />
+    </Stack.Navigator>
+  );
+}
 
 function LoginStack() {
   return (
@@ -66,6 +81,8 @@ export default function RootLayout() {
             },
           });
 
+          console.log(response.data);
+
           if (response.data.success) {
             setTokenExists(true);
           } else {
@@ -76,6 +93,7 @@ export default function RootLayout() {
           setTokenExists(false);
         }
       } catch (error) {
+        console.log("TOKEN REMOVED");
         await AsyncStorage.removeItem('authToken');
         setTokenExists(false);
       }
@@ -103,7 +121,7 @@ export default function RootLayout() {
       }
     };
 
-    const intervalTokenExistence = setInterval(checkTokenExistence, 1000);
+    const intervalTokenExistence = setInterval(checkTokenExistence, 2500);
     const intervalEmailVerification = setInterval(checkEmailVerification, 5000);
 
     checkTokenExistence();
@@ -119,7 +137,7 @@ export default function RootLayout() {
     <Tab.Navigator screenOptions={{ headerShown: false }}>
       <Tab.Screen
         name="home"
-        component={HomeScreen}
+        component={HomeStack}
         options={{
           tabBarLabel: 'Home',
           tabBarIcon: ({ color, size }) => (

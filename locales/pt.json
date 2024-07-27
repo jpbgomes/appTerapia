@@ -74,5 +74,7 @@
   "rehab_image_path": "/assets/services/special_rehabilitation.jpeg",
   "body_treat_title": "Tratamento corporal",
   "body_treat_desc": "Delicie-se com uma sessão de tratamento corporal rejuvenescedor",
-  "body_treat_image_path": "/assets/services/body_treatment.jpg"
+  "body_treat_image_path": "/assets/services/body_treatment.jpg",
+  "lymphatic_drainage_title": "Drenagem Linfática",
+  "lymphatic_drainage_desc": "A drenagem linfática é uma técnica terapêutica avançada que visa melhorar a função do sistema linfático do corpo por meio de uma massagem manual suave e direcionada."
 }
