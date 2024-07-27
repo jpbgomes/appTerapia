@@ -32,5 +32,8 @@ export const Colors = {
     light: '#f1f6ff',
     normal: '#0265ff',
     medium: 'rgba(0, 82, 255, 0.75)',
+  },
+  green: {
+    normal: 'rgb(22 163 74)',
   }
 };

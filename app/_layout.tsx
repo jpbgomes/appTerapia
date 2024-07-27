@@ -81,8 +81,6 @@ export default function RootLayout() {
             },
           });
 
-          console.log(response.data);
-
           if (response.data.success) {
             setTokenExists(true);
           } else {
@@ -93,7 +91,6 @@ export default function RootLayout() {
           setTokenExists(false);
         }
       } catch (error) {
-        console.log("TOKEN REMOVED");
         await AsyncStorage.removeItem('authToken');
         setTokenExists(false);
       }

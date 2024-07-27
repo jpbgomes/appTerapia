@@ -1,21 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, Alert, FlatList, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, Alert, ScrollView, Image } from 'react-native';
 import { AppLayout } from '@/layouts/app';
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
 import { Colors } from '@/constants/Colors';
 import { SmallLogo } from '@/components/SmallLogo';
 import { Overlay } from '@rneui/themed';
-
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation';
-
 import enTranslations from '../locales/en.json';
 import ptTranslations from '../locales/pt.json';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { baseUrl } from '@/setup';
 import axios from 'axios';
-import { Image } from 'react-native';
-
 
 export default function Home() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
@@ -33,6 +29,10 @@ export default function Home() {
   const [successMessage, setSuccessMessage] = useState('');
 
   const [scategories, setSCategories] = useState([]);
+  const [therapists, setTherapists] = useState([]);
+
+  const [selectedService, setSelectedService] = useState(null);
+  const [showTherapists, setShowTherapists] = useState(false);
 
   const toggleOverlay = () => {
     setVisible(!visible);
@@ -47,8 +47,6 @@ export default function Home() {
     const checkAuthStatus = async () => {
       try {
         const token = await AsyncStorage.getItem('authToken');
-        console.log(token);
-
         setTokenExists(!!token);
         setTokenValue(token || '');
 
@@ -68,12 +66,14 @@ export default function Home() {
 
   useEffect(() => {
     if (tokenExists && emailVerified) {
-      getServicesData();
+      getGeneralData();
     }
   }, [tokenExists, emailVerified]);
 
-  const getServicesData = async () => {
+  const getGeneralData = async () => {
     if (loading) return;
+
+    console.log("CALLED");
 
     try {
       setLoading(true);
@@ -81,15 +81,18 @@ export default function Home() {
       const token = await AsyncStorage.getItem('authToken');
 
       if (token) {
-        const response = await axios.get(`${baseUrl}/api/getServices`, {
+        const response = await axios.get(`${baseUrl}/api/getData`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
         });
 
         setSCategories(response.data.serviceCategories);
+        setTherapists(response.data.therapists);
+
+        console.log(response.data.therapists);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log('Error fetching services data:', error);
       if (error.response) {
         console.log('Response data:', error.response.data);
@@ -149,6 +152,23 @@ export default function Home() {
     }
   };
 
+  const handleServiceSelection = (service: any) => {
+    setSelectedService(service);
+    setShowTherapists(true);
+  };
+
+  const goBackToServices = () => {
+    setSelectedService(null);
+    setShowTherapists(false);
+  };
+
+  const handleTherapistSelection = (therapist: any) => {
+    navigation.navigate('confirm', {
+      selectedService: selectedService,
+      selectedTherapist: therapist,
+    });
+  };
+
   return (
     <AppLayout>
       <Overlay isVisible={visible} onBackdropPress={toggleOverlay} overlayStyle={styles.overlayMainContainer}>
@@ -165,9 +185,15 @@ export default function Home() {
       <View style={styles.header}>
         {tokenExists ? (
           <>
-            <TouchableOpacity style={styles.backView} onPress={handleLogout}>
-              <TabBarIcon name='cloud-download-outline' style={styles.backIcon} />
-            </TouchableOpacity>
+            {showTherapists ? (
+              <TouchableOpacity style={styles.backView} onPress={goBackToServices}>
+                <TabBarIcon name='arrow-back' style={styles.backIcon} />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity style={styles.backView} onPress={handleLogout}>
+                <TabBarIcon name='cloud-download-outline' style={styles.backIcon} />
+              </TouchableOpacity>
+            )}
 
             <TouchableOpacity style={styles.backView} onPress={toggleOverlay}>
               <TabBarIcon name='language' style={styles.backIcon} />
@@ -179,6 +205,8 @@ export default function Home() {
           </TouchableOpacity>
         )}
       </View>
+
+      <SmallLogo size={100} style={styles.logoIcon} />
 
       <View style={styles.homeContainer}>
         {tokenExists ? (
@@ -193,57 +221,93 @@ export default function Home() {
             </>
           ) : (
             <>
-              <ScrollView style={styles.scrollContainer}>
-                {scategories.length > 0 ? (
-                  scategories.map((category) => (
-                    <View key={category.id} style={styles.categoryContainer}>
-                      <View style={styles.subcategoryContainer}>
-                        <Image
-                          source={{ uri: category.image_path ? `${baseUrl}/${category.image_path}` : `${baseUrl}/assets/unknown.jpg` }}
-                          style={styles.categoryImage}
-                        />
-                        <Text style={styles.categoryName}>
-                          {translations[category.name]}
-                        </Text>
-                      </View>
+              {showTherapists ? (
+                <View style={styles.therapistsContainer}>
+                  {therapists.length > 0 ? (
+                    therapists.map((therapist) => (
+                      <TouchableOpacity
+                        key={therapist.id}
+                        style={styles.therapistItem}
+                        onPress={() => handleTherapistSelection(therapist)}
+                      >
+                        <View style={styles.therapistFirstItem}>
+                          <Image
+                            source={{ uri: therapist.user.image_path ? `${baseUrl}/${therapist.user.image_path}` : `${baseUrl}/assets/unknown.jpg` }}
+                            style={styles.categoryImage}
+                          />
+                          <View style={styles.therapistSubItem}>
+                            <Text style={styles.therapistName}>{therapist.user.name}</Text>
+                            <Text style={styles.therapistYears}>{therapist.years_of_experience} {translations.yearsOfExperience}</Text>
+                            <Text style={styles.therapistDescription}>{therapist.description}</Text>
+                          </View>
+                        </View>
 
+                        <View style={styles.therapistSecondItem}>
+                          <TouchableOpacity style={styles.therapistSelectButton} onPress={() => handleTherapistSelection(therapist)}>
+                            <Text style={styles.therapistButtonText}>{translations.selectTherapist}</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </TouchableOpacity>
 
-                      <View style={styles.serviceContainer}>
-                        {category.services && category.services.length > 0 ? (
-                          category.services.map((service: any) => (
-                            <TouchableOpacity key={service.id} style={styles.serviceItem} onPress={() => navigation.navigate('confirm')}>
-                              <Text style={styles.serviceName}>
-                                {translations[service.name] || service.name}
-                              </Text>
-                              <Text style={styles.serviceDescription}>
-                                {translations[service.description] ||
-                                  service.description}
-                              </Text>
+                    ))
+                  ) : (
+                    <Text style={styles.emptyMessage}>{translations.noTherapists}</Text>
+                  )}
+                </View>
+              ) : (
+                <ScrollView style={styles.scrollContainer}>
+                  {scategories.length > 0 ? (
+                    scategories.map((category) => (
+                      <View key={category.id} style={styles.categoryContainer}>
+                        <View style={styles.subcategoryContainer}>
+                          <Image
+                            source={{ uri: category.image_path ? `${baseUrl}/${category.image_path}` : `${baseUrl}/assets/unknown.jpg` }}
+                            style={styles.categoryImage}
+                          />
+                          <Text style={styles.categoryName}>
+                            {translations[category.name]}
+                          </Text>
+                        </View>
 
-                              <View style={styles.serviceDetails}>
-                                <View style={styles.servicePriceDuration}>
-                                  <Text style={styles.servicePrice}>
-                                    {translations[service.price] || service.price}€
-                                  </Text>
+                        <View style={styles.serviceContainer}>
+                          {category.services && category.services.length > 0 ? (
+                            category.services.map((service: any) => (
+                              <TouchableOpacity
+                                key={service.id}
+                                style={styles.serviceItem}
+                                onPress={() => handleServiceSelection(service)}
+                              >
+                                <Text style={styles.serviceName}>
+                                  {translations[service.name] || service.name}
+                                </Text>
+                                <Text style={styles.serviceDescription}>
+                                  {translations[service.description] || service.description}
+                                </Text>
 
-                                  <Text style={styles.serviceDuration}>
-                                    {translations[service.duration] ||
-                                      service.duration} min
-                                  </Text>
+                                <View style={styles.serviceDetails}>
+                                  <View style={styles.servicePriceDuration}>
+                                    <Text style={styles.servicePrice}>
+                                      {translations[service.price] || service.price}€
+                                    </Text>
+
+                                    <Text style={styles.serviceDuration}>
+                                      {translations[service.duration] || service.duration} min
+                                    </Text>
+                                  </View>
                                 </View>
-                              </View>
-                            </TouchableOpacity>
-                          ))
-                        ) : (
-                          <Text style={styles.noServices}>{translations.noServices}</Text>
-                        )}
+                              </TouchableOpacity>
+                            ))
+                          ) : (
+                            <Text style={styles.noServices}>{translations.noServices}</Text>
+                          )}
+                        </View>
                       </View>
-                    </View>
-                  ))
-                ) : (
-                  <Text style={styles.emptyMessage}>{translations.noCategories}</Text>
-                )}
-              </ScrollView>
+                    ))
+                  ) : (
+                    <Text style={styles.emptyMessage}>{translations.noCategories}</Text>
+                  )}
+                </ScrollView>
+              )}
             </>
           )
         ) : (
@@ -295,9 +359,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: Colors.blue.normal,
   },
-  homeContainer: {
-
+  logoIcon: {
+    backgroundColor: Colors.blue.light,
+    alignSelf: 'center',
+    borderRadius: 1000,
+    marginTop: 20,
   },
+  homeContainer: {},
   homeButton: {
     backgroundColor: Colors.blue.normal,
     alignItems: 'center',
@@ -326,31 +394,25 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-
   errorMessage: {
     color: 'red',
     textAlign: 'center',
     marginTop: 10,
   },
   successMessage: {
-    color: 'green',
+    color: Colors.green.normal,
     textAlign: 'center',
     marginTop: 10,
   },
-
-  // CATEGORIAS
-
   scrollContainer: {
     marginTop: 20,
   },
   categoryContainer: {
     marginVertical: 30,
     padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.gray.light,
     flexDirection: 'column',
     borderRadius: 25,
-    backgroundColor: Colors.gray.light
+    backgroundColor: Colors.gray.light,
   },
   subcategoryContainer: {
     flexDirection: 'row',
@@ -363,14 +425,13 @@ const styles = StyleSheet.create({
     height: 70,
     borderRadius: 35,
     marginBottom: 10,
-    backgroundColor: 'gray'
+    backgroundColor: 'gray',
   },
   categoryName: {
     fontSize: 18,
     fontWeight: 'bold',
   },
   serviceContainer: {
-    marginTop: 10,
     flexDirection: 'column',
     gap: 20,
   },
@@ -386,7 +447,7 @@ const styles = StyleSheet.create({
   },
   serviceDescription: {
     color: 'white',
-    fontSize: 12, // Smaller font size for the description
+    fontSize: 12,
     marginTop: 5,
   },
   serviceDetails: {
@@ -427,5 +488,65 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 16,
     color: Colors.gray.medium,
+  },
+  therapistsContainer: {
+    // padding: 10,
+    marginTop: 20,
+  },
+  backButton: {
+    backgroundColor: Colors.blue.normal,
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  backButtonText: {
+    color: 'white',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+
+  therapistItem: {
+    flexDirection: 'column',
+    gap: 15,
+    backgroundColor: Colors.gray.light,
+    padding: 10,
+    borderRadius: 15,
+    marginTop: 30,
+  },
+  therapistFirstItem: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+
+  therapistSecondItem: {
+  },
+  therapistSelectButton: {
+    backgroundColor: Colors.blue.normal,
+    padding: 5,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  therapistButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+
+  therapistSubItem: {
+    flexDirection: 'column',
+    justifyContent: 'center',
+
+  },
+  therapistName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+
+  therapistYears: {
+
+  },
+  therapistDescription: {
+    fontSize: 12,
   },
 });

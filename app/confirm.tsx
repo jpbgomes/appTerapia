@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { AppLayout } from '@/layouts/app';
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
 import { Colors } from '@/constants/Colors';
 import { SmallLogo } from '@/components/SmallLogo';
 import { Overlay } from '@rneui/themed';
-
+import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation';
 
@@ -13,19 +13,46 @@ import enTranslations from '../locales/en.json';
 import ptTranslations from '../locales/pt.json';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-import { baseUrl } from '@/setup';
 
-export default function Confirm() {
+// Define locale configurations
+const localeConfigs = {
+  en: {
+    monthNames: [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ],
+    monthNamesShort: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+    dayNames: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+    dayNamesShort: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+    today: 'Today'
+  },
+  pt: {
+    monthNames: [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ],
+    monthNamesShort: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+    dayNames: ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'],
+    dayNamesShort: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
+    today: 'Hoje'
+  }
+};
+
+export default function Confirm({ route }: any) {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const { selectedService, selectedTherapist } = route.params;
+
+  console.log(selectedService, selectedTherapist);
 
   const [locale, setLocale] = useState('pt');
-  const translations = locale === 'en' ? enTranslations : ptTranslations;
+  const [monthNames, setMonthNames] = useState(localeConfigs[locale]);
 
-  const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  // Set locale config for the calendar
+  useEffect(() => {
+    LocaleConfig.locales['en'] = localeConfigs.en;
+    LocaleConfig.locales['pt'] = localeConfigs.pt;
+    LocaleConfig.defaultLocale = locale;
+  }, [locale]);
 
   const [visible, setVisible] = useState(false);
   const [token, setToken] = useState('');
@@ -48,50 +75,35 @@ export default function Confirm() {
     setVisible(!visible);
   };
 
-  const handleLanguageChange = (selectedLocale: string) => {
+  const handleLanguageChange = (selectedLocale: any) => {
     setLocale(selectedLocale);
     toggleOverlay();
   };
 
-  const handleForgot = async () => {
-    if (loading) return;
+  const [selectedDate, setSelectedDate] = useState('');
 
-    try {
-      setLoading(true);
+  const onDayPress = (day: any) => {
+    const date = new Date(day.timestamp);
+    const dayOfWeek = date.getDay();
 
-      const userData = {
-        email: email,
-        locale: locale,
-      };
-
-      const response = await axios.post(`${baseUrl}/api/resetPassword`, userData, {
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-      });
-
-      setErrorMessage('');
-      setSuccessMessage(response.data.message);
-
-    } catch (error: any) {
-      if (error.response) {
-        const status = error.response.status;
-        const data = error.response.data;
-
-        const errorMessage = data.errorMessage;
-
-        if (status === 422 && errorMessage) {
-          setErrorMessage(errorMessage);
-        } else {
-          setErrorMessage(translations.generic_error);
-        }
-      } else {
-        setErrorMessage(translations.network_error);
-      }
-    } finally {
-      setLoading(false);
+    if (dayOfWeek === 0) {
+      Alert.alert("Unavailable", "Scheduling is only available from Monday to Friday.");
+      return;
     }
+
+    if (dayOfWeek === 6) {
+      Alert.alert(
+        "Special Attention",
+        "To schedule on a Friday, please call the owner manually to confirm."
+      );
+      return;
+    }
+
+    setSelectedDate(day.dateString);
+  };
+
+  const markedDates = {
+    ...(selectedDate ? { [selectedDate]: { selected: true, selectedColor: Colors.blue.normal } } : {}),
   };
 
   return (
@@ -119,11 +131,38 @@ export default function Confirm() {
 
       <SmallLogo size={100} style={styles.logoIcon} />
 
-      {/* SELECIONAR MÊS */}
-      {/* SELECIONAR DIAS DO MêS */}
-
-      {errorMessage ? <Text style={styles.errorMessage}>{errorMessage}</Text> : null}
-      {successMessage ? <Text style={styles.successMessage}>{successMessage}</Text> : null}
+      <Calendar
+        current={'2024-07-01'}
+        minDate={new Date().toISOString().split('T')[0]}
+        onDayPress={onDayPress}
+        monthFormat={'MMMM yyyy'}
+        hideArrows={false}
+        hideExtraDays={true}
+        disableMonthChange={false}
+        firstDay={1}
+        markedDates={markedDates}
+        theme={{
+          backgroundColor: '#ffffff',
+          calendarBackground: '#ffffff',
+          textSectionTitleColor: Colors.gray.medium,
+          selectedDayBackgroundColor: Colors.blue.normal,
+          selectedDayTextColor: '#ffffff',
+          todayTextColor: Colors.blue.normal,
+          dayTextColor: Colors.gray.medium,
+          textDisabledColor: '#d9e1e8',
+          arrowColor: Colors.gray.medium,
+          monthTextColor: Colors.gray.medium,
+          indicatorColor: 'blue',
+          textDayFontFamily: 'monospace',
+          textMonthFontFamily: 'monospace',
+          textDayHeaderFontFamily: 'monospace',
+          textMonthFontWeight: 'bold',
+          textDayFontSize: 16,
+          textMonthFontSize: 16,
+          textDayHeaderFontSize: 16,
+        }}
+        style={styles.calendar}
+      />
     </AppLayout>
   );
 }
@@ -155,51 +194,6 @@ const styles = StyleSheet.create({
     borderRadius: 1000,
     marginTop: 20,
   },
-  sectionContainer: {
-    marginVertical: 40,
-    paddingHorizontal: 10,
-  },
-  sectionTitle: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  sectionSubtitle: {
-    fontSize: 15,
-    color: Colors.gray.medium,
-  },
-  inputContainer: {
-    marginBottom: 20,
-    paddingHorizontal: 10,
-  },
-  inputLabel: {
-    fontSize: 18,
-    marginBottom: 5,
-  },
-  inputField: {
-    height: 50,
-    fontSize: 16,
-    borderColor: Colors.gray.light,
-    borderWidth: 1,
-    paddingHorizontal: 15,
-    borderRadius: 25,
-    width: '100%',
-    backgroundColor: Colors.gray.light,
-  },
-  forgotButton: {
-    backgroundColor: Colors.blue.normal,
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 50,
-    borderRadius: 25,
-    marginTop: 20,
-    marginHorizontal: 20,
-  },
-  forgotButtonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
   overlayMainContainer: {
     padding: 20,
     borderRadius: 15,
@@ -218,14 +212,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: Colors.blue.normal,
   },
-  errorMessage: {
-    color: 'red',
-    textAlign: 'center',
-    marginTop: 10,
-  },
-  successMessage: {
-    color: 'green',
-    textAlign: 'center',
-    marginTop: 10,
+  calendar: {
+    marginTop: 50,
   },
 });
