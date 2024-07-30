@@ -73,8 +73,6 @@ export default function Home() {
   const getGeneralData = async () => {
     if (loading) return;
 
-    console.log("CALLED");
-
     try {
       setLoading(true);
 
@@ -89,11 +87,8 @@ export default function Home() {
 
         setSCategories(response.data.serviceCategories);
         setTherapists(response.data.therapists);
-
-        console.log(response.data.therapists);
       }
     } catch (error: any) {
-      console.log('Error fetching services data:', error);
       if (error.response) {
         console.log('Response data:', error.response.data);
       }

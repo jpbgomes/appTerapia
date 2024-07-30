@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from 'react-native';
 import { AppLayout } from '@/layouts/app';
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
 import { Colors } from '@/constants/Colors';
@@ -13,8 +13,9 @@ import enTranslations from '../locales/en.json';
 import ptTranslations from '../locales/pt.json';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import { baseUrl } from '@/setup';
 
-// Define locale configurations
 const localeConfigs = {
   en: {
     monthNames: [
@@ -40,14 +41,17 @@ const localeConfigs = {
 
 export default function Confirm({ route }: any) {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const { selectedService, selectedTherapist } = route.params;
-
-  console.log(selectedService, selectedTherapist);
 
   const [locale, setLocale] = useState('pt');
+  const translations = locale === 'en' ? enTranslations : ptTranslations;
   const [monthNames, setMonthNames] = useState(localeConfigs[locale]);
 
-  // Set locale config for the calendar
+  const { selectedService, selectedTherapist } = route.params;
+
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [availableSlots, setAvailableSlots] = useState([]);
+
   useEffect(() => {
     LocaleConfig.locales['en'] = localeConfigs.en;
     LocaleConfig.locales['pt'] = localeConfigs.pt;
@@ -87,20 +91,112 @@ export default function Confirm({ route }: any) {
     const dayOfWeek = date.getDay();
 
     if (dayOfWeek === 0) {
-      Alert.alert("Unavailable", "Scheduling is only available from Monday to Friday.");
+      Alert.alert(translations.unavailable, translations.scheduling_unavailable);
       return;
     }
 
     if (dayOfWeek === 6) {
       Alert.alert(
-        "Special Attention",
-        "To schedule on a Friday, please call the owner manually to confirm."
+        translations.special_attention_title,
+        translations.special_attention
       );
       return;
     }
 
     setSelectedDate(day.dateString);
+    handleDay(day.dateString);
   };
+
+  const handleDay = async (date: string) => {
+    if (loading) return;
+
+    try {
+      setLoading(true);
+
+      const requestData = {
+        date: date,
+        therapist: selectedTherapist,
+        service: selectedService,
+        locale: locale,
+      };
+
+      const response = await axios.post(`${baseUrl}/api/checkDay`, requestData, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      setErrorMessage('');
+      setAvailableSlots(response.data.availableSlots);
+    } catch (error: any) {
+      if (error.response) {
+        setAvailableSlots([]);
+        const status = error.response.status;
+        const data = error.response.data;
+
+        const errorMessage = data.errorMessage;
+
+        if (status === 422 && errorMessage) {
+          setErrorMessage(errorMessage);
+        } else {
+          setErrorMessage(translations.generic_error);
+        }
+      } else {
+        setErrorMessage(translations.network_error);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const bookSlot = async (slot: any) => {
+    if (loading) return;
+
+    try {
+      setLoading(true);
+
+      const requestData = {
+        slot: slot,
+        date: selectedDate,
+        therapist: selectedTherapist,
+        service: selectedService,
+        locale: locale,
+      };
+
+      const response = await axios.post(`${baseUrl}/api/bookSlot`, requestData, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      Alert.alert('Success', 'Your appointment has been booked successfully.');
+    } catch (error: any) {
+      if (error.response) {
+        console.log(error);
+        console.log(error.response.data);
+
+        const status = error.response.status;
+        const data = error.response.data;
+
+        const errorMessage = data.errorMessage;
+
+        if (status === 422 && errorMessage) {
+          setErrorMessage(errorMessage);
+        } else {
+          setErrorMessage(translations.generic_error);
+        }
+      } else {
+        setErrorMessage(translations.network_error);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   const markedDates = {
     ...(selectedDate ? { [selectedDate]: { selected: true, selectedColor: Colors.blue.normal } } : {}),
@@ -163,6 +259,26 @@ export default function Confirm({ route }: any) {
         }}
         style={styles.calendar}
       />
+
+      {errorMessage ? <Text style={styles.errorMessage}>{errorMessage}</Text> : null}
+
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.blue.normal} />
+        </View>
+      ) : (
+        <ScrollView style={styles.scrollView}>
+          {availableSlots.map((slot, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.slotButton}
+              onPress={() => bookSlot(slot)}
+            >
+              <Text style={styles.slotText}>{`${slot.start} - ${slot.end}`}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
     </AppLayout>
   );
 }
@@ -213,6 +329,33 @@ const styles = StyleSheet.create({
     color: Colors.blue.normal,
   },
   calendar: {
+    marginTop: 50,
+  },
+  errorMessage: {
+    color: 'red',
+    textAlign: 'center',
+    marginTop: 30,
+  },
+  scrollView: {
+    marginTop: 50,
+    paddingHorizontal: 20,
+  },
+  slotButton: {
+    backgroundColor: Colors.blue.normal,
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  slotText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginTop: 50,
   },
 });

@@ -80,5 +80,9 @@
   "goBack": "Retornar",
   "selectTherapist": "Selecionar Terapeuta",
   "noTherapists": "Não há terapeutas",
-  "yearsOfExperience": "Anos de Experiência"
+  "yearsOfExperience": "Anos de Experiência",
+  "scheduling_unavailable": "O agendamento está disponível apenas de segunda a sexta-feira, ou sábado se entrar em contacto diretos.",
+  "special_attention": "Para agendar no sábado, por favor, ligue para o proprietário manualmente para confirmar.",
+  "unavailable": "Indisponível",
+  "special_attention_title": "Atenção"
 }
