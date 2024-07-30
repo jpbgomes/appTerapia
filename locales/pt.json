@@ -84,5 +84,13 @@
   "scheduling_unavailable": "O agendamento está disponível apenas de segunda a sexta-feira, ou sábado se entrar em contacto diretos.",
   "special_attention": "Para agendar no sábado, por favor, ligue para o proprietário manualmente para confirmar.",
   "unavailable": "Indisponível",
-  "special_attention_title": "Atenção"
+  "special_attention_title": "Atenção",
+  "recent_surgery": "Teve alguma cirurgia recente?",
+  "medication": "Está tomando algum medicamento?",
+  "validation_error": "Erro de Validação",
+  "success": "Sucesso",
+  "booked_success": "Consulta agendada com sucesso, verifique o seu email para mais detalhes.",
+  "answer_all": "Por favor responda a todas as perguntas antes do agendamento.",
+  "custom_note": "Nota adicional",
+  "confirm_booking": "Confirmar Consulta"
 }

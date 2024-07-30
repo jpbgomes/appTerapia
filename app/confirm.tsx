@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator, TextInput, Switch } from 'react-native';
 import { AppLayout } from '@/layouts/app';
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
 import { Colors } from '@/constants/Colors';
@@ -9,8 +9,13 @@ import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation';
 
+// Import translations
 import enTranslations from '../locales/en.json';
 import ptTranslations from '../locales/pt.json';
+import esTranslations from '../locales/es.json';
+import frTranslations from '../locales/fr.json';
+import itTranslations from '../locales/it.json';
+import deTranslations from '../locales/de.json';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
@@ -36,6 +41,46 @@ const localeConfigs = {
     dayNames: ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'],
     dayNamesShort: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
     today: 'Hoje'
+  },
+  es: {
+    monthNames: [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ],
+    monthNamesShort: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+    dayNames: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
+    dayNamesShort: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+    today: 'Hoy'
+  },
+  fr: {
+    monthNames: [
+      'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+      'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+    ],
+    monthNamesShort: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jui', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'],
+    dayNames: ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'],
+    dayNamesShort: ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'],
+    today: 'Aujourd\'hui'
+  },
+  it: {
+    monthNames: [
+      'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+      'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
+    ],
+    monthNamesShort: ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'],
+    dayNames: ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'],
+    dayNamesShort: ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'],
+    today: 'Oggi'
+  },
+  de: {
+    monthNames: [
+      'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
+      'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'
+    ],
+    monthNamesShort: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
+    dayNames: ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'],
+    dayNamesShort: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'],
+    today: 'Heute'
   }
 };
 
@@ -43,7 +88,14 @@ export default function Confirm({ route }: any) {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   const [locale, setLocale] = useState('pt');
-  const translations = locale === 'en' ? enTranslations : ptTranslations;
+  const translations = {
+    en: enTranslations,
+    pt: ptTranslations,
+    es: esTranslations,
+    fr: frTranslations,
+    it: itTranslations,
+    de: deTranslations,
+  }[locale];
   const [monthNames, setMonthNames] = useState(localeConfigs[locale]);
 
   const { selectedService, selectedTherapist } = route.params;
@@ -52,14 +104,26 @@ export default function Confirm({ route }: any) {
   const [errorMessage, setErrorMessage] = useState('');
   const [availableSlots, setAvailableSlots] = useState([]);
 
+  const [visible, setVisible] = useState(false);
+  const [token, setToken] = useState('');
+
+  const [selectedDate, setSelectedDate] = useState('');
+  const [showQuestionOverlay, setShowQuestionOverlay] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState(null);
+
+  const [recentSurgery, setRecentSurgery] = useState(false);
+  const [takesMedication, setTakesMedication] = useState(false);
+  const [customNote, setCustomNote] = useState('');
+
   useEffect(() => {
     LocaleConfig.locales['en'] = localeConfigs.en;
     LocaleConfig.locales['pt'] = localeConfigs.pt;
+    LocaleConfig.locales['es'] = localeConfigs.es;
+    LocaleConfig.locales['fr'] = localeConfigs.fr;
+    LocaleConfig.locales['it'] = localeConfigs.it;
+    LocaleConfig.locales['de'] = localeConfigs.de;
     LocaleConfig.defaultLocale = locale;
   }, [locale]);
-
-  const [visible, setVisible] = useState(false);
-  const [token, setToken] = useState('');
 
   useEffect(() => {
     const checkToken = async () => {
@@ -79,12 +143,14 @@ export default function Confirm({ route }: any) {
     setVisible(!visible);
   };
 
+  const toggleQuestionOverlay = () => {
+    setShowQuestionOverlay(!showQuestionOverlay);
+  };
+
   const handleLanguageChange = (selectedLocale: any) => {
     setLocale(selectedLocale);
     toggleOverlay();
   };
-
-  const [selectedDate, setSelectedDate] = useState('');
 
   const onDayPress = (day: any) => {
     const date = new Date(day.timestamp);
@@ -151,18 +217,35 @@ export default function Confirm({ route }: any) {
     }
   };
 
-  const bookSlot = async (slot: any) => {
+  const handleSlotPress = (slot: any) => {
+    setSelectedSlot(slot);
+    toggleQuestionOverlay();
+  };
+
+  const bookSlot = async () => {
     if (loading) return;
+
+    if (!recentSurgery || !takesMedication || !customNote) {
+      Alert.alert(translations.validation_error, translations.answer_all);
+      return;
+    }
+
+    toggleQuestionOverlay();
 
     try {
       setLoading(true);
 
       const requestData = {
-        slot: slot,
-        date: selectedDate,
-        therapist: selectedTherapist,
-        service: selectedService,
         locale: locale,
+        slot: selectedSlot,
+        date: selectedDate,
+        time: selectedSlot?.start,
+        therapist: selectedTherapist.id,
+        service: selectedService.id,
+        service_price: selectedService.price,
+        any_recent_surgery: recentSurgery,
+        use_medication: takesMedication,
+        note: customNote,
       };
 
       const response = await axios.post(`${baseUrl}/api/bookSlot`, requestData, {
@@ -173,12 +256,16 @@ export default function Confirm({ route }: any) {
         },
       });
 
-      Alert.alert('Success', 'Your appointment has been booked successfully.');
+      setSelectedDate('');
+      setSelectedSlot(null);
+      setErrorMessage('');
+      setRecentSurgery(false);
+      setTakesMedication(false);
+      setCustomNote('');
+
+      Alert.alert(translations.success, translations.booked_success);
     } catch (error: any) {
       if (error.response) {
-        console.log(error);
-        console.log(error.response.data);
-
         const status = error.response.status;
         const data = error.response.data;
 
@@ -197,13 +284,13 @@ export default function Confirm({ route }: any) {
     }
   };
 
-
   const markedDates = {
     ...(selectedDate ? { [selectedDate]: { selected: true, selectedColor: Colors.blue.normal } } : {}),
   };
 
   return (
     <AppLayout>
+      {/* Language Overlay */}
       <Overlay isVisible={visible} onBackdropPress={toggleOverlay} overlayStyle={styles.overlayMainContainer}>
         <View style={styles.overlayContainer}>
           <TouchableOpacity style={styles.languageOption} onPress={() => handleLanguageChange('en')}>
@@ -211,6 +298,44 @@ export default function Confirm({ route }: any) {
           </TouchableOpacity>
           <TouchableOpacity style={styles.languageOption} onPress={() => handleLanguageChange('pt')}>
             <Text style={styles.languageText}>Português</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.languageOption} onPress={() => handleLanguageChange('es')}>
+            <Text style={styles.languageText}>Español</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.languageOption} onPress={() => handleLanguageChange('fr')}>
+            <Text style={styles.languageText}>Français</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.languageOption} onPress={() => handleLanguageChange('it')}>
+            <Text style={styles.languageText}>Italiano</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.languageOption} onPress={() => handleLanguageChange('de')}>
+            <Text style={styles.languageText}>Deutsch</Text>
+          </TouchableOpacity>
+        </View>
+      </Overlay>
+
+      {/* Questions Overlay */}
+      <Overlay isVisible={showQuestionOverlay} onBackdropPress={toggleQuestionOverlay} overlayStyle={styles.overlayMainContainer}>
+        <View style={styles.overlayContainer}>
+          <Text style={styles.overlayLabel}>{translations.recent_surgery}</Text>
+          <Switch
+            value={recentSurgery}
+            onValueChange={(value) => setRecentSurgery(value)}
+          />
+          <Text style={styles.overlayLabel}>{translations.medication}</Text>
+          <Switch
+            value={takesMedication}
+            onValueChange={(value) => setTakesMedication(value)}
+          />
+          <Text style={styles.overlayLabel}>{translations.custom_note}</Text>
+          <TextInput
+            style={[styles.textInput, { height: 100 }]}
+            multiline
+            value={customNote}
+            onChangeText={(text) => setCustomNote(text)}
+          />
+          <TouchableOpacity style={styles.submitButton} onPress={bookSlot}>
+            <Text style={styles.submitButtonText}>{translations.confirm_booking}</Text>
           </TouchableOpacity>
         </View>
       </Overlay>
@@ -272,7 +397,7 @@ export default function Confirm({ route }: any) {
             <TouchableOpacity
               key={index}
               style={styles.slotButton}
-              onPress={() => bookSlot(slot)}
+              onPress={() => handleSlotPress(slot)}
             >
               <Text style={styles.slotText}>{`${slot.start} - ${slot.end}`}</Text>
             </TouchableOpacity>
@@ -357,5 +482,39 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 50,
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  overlayLabel: {
+    fontSize: 16,
+    marginVertical: 5,
+  },
+  textInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 50,
+    fontSize: 16,
+    borderColor: Colors.gray.light,
+    borderWidth: 1,
+    paddingHorizontal: 15,
+    borderRadius: 25,
+    width: '100%',
+    backgroundColor: Colors.gray.light,
+  },
+  submitButton: {
+    backgroundColor: Colors.blue.normal,
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 50,
+    borderRadius: 25,
+    marginTop: 20,
+    marginHorizontal: 20,
+    width: '100%',
+  },
+  submitButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

@@ -11,12 +11,23 @@ import { RootStackParamList } from '../navigation';
 
 import enTranslations from '../locales/en.json';
 import ptTranslations from '../locales/pt.json';
+import esTranslations from '../locales/es.json';
+import frTranslations from '../locales/fr.json';
+import itTranslations from '../locales/it.json';
+import deTranslations from '../locales/de.json';
 
 export default function Terms() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   const [locale, setLocale] = useState('pt');
-  const translations = locale === 'en' ? enTranslations : ptTranslations;
+  const translations = {
+    en: enTranslations,
+    pt: ptTranslations,
+    es: esTranslations,
+    fr: frTranslations,
+    it: itTranslations,
+    de: deTranslations,
+  }[locale];
 
   const [visible, setVisible] = useState(false);
 
@@ -38,6 +49,18 @@ export default function Terms() {
           </TouchableOpacity>
           <TouchableOpacity style={styles.languageOption} onPress={() => handleLanguageChange('pt')}>
             <Text style={styles.languageText}>Português</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.languageOption} onPress={() => handleLanguageChange('es')}>
+            <Text style={styles.languageText}>Español</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.languageOption} onPress={() => handleLanguageChange('fr')}>
+            <Text style={styles.languageText}>Français</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.languageOption} onPress={() => handleLanguageChange('it')}>
+            <Text style={styles.languageText}>Italiano</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.languageOption} onPress={() => handleLanguageChange('de')}>
+            <Text style={styles.languageText}>Deutsch</Text>
           </TouchableOpacity>
         </View>
       </Overlay>
