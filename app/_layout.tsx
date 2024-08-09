@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useFonts } from 'expo-font';
-import * as SplashScreen from 'expo-splash-screen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { View, Text, StyleSheet } from 'react-native';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import HomeScreen from './home';
@@ -14,7 +14,7 @@ import ForgotScreen from './forgot';
 import ConfirmScreen from './confirm';
 import TermsScreen from './terms';
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
-import { baseUrl } from '@/setup';
+import { baseUrl, appVersion } from '@/setup';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -61,6 +61,83 @@ function RegisterStack() {
   );
 }
 
+const RETRY_DELAY = 2000; // 2 seconds delay
+
+async function checkTokenExistence(retryCount = 0) {
+  try {
+    const token = await AsyncStorage.getItem('authToken');
+
+    if (token) {
+      const response = await axios.get(`${baseUrl}/api/user/check-token`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.data.success) {
+        return true;
+      } else {
+        await AsyncStorage.removeItem('authToken');
+        return false;
+      }
+    } else {
+      return false;
+    }
+  } catch (error) {
+    await AsyncStorage.removeItem('authToken');
+    if (retryCount < 5) { // Retry up to 5 times
+      await new Promise(res => setTimeout(res, RETRY_DELAY));
+      return checkTokenExistence(retryCount + 1);
+    } else {
+      return false;
+    }
+  }
+}
+
+async function checkEmailVerification(retryCount = 0) {
+  try {
+    const token = await AsyncStorage.getItem('authToken');
+
+    if (token) {
+      const response = await axios.get(`${baseUrl}/api/user/check-email`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.data.success) {
+        await AsyncStorage.setItem('emailVerified', JSON.stringify(true));
+      } else {
+        await AsyncStorage.setItem('emailVerified', JSON.stringify(false));
+      }
+    }
+  } catch (error) {
+    await AsyncStorage.setItem('emailVerified', JSON.stringify(false));
+    if (retryCount < 5) { // Retry up to 5 times
+      await new Promise(res => setTimeout(res, RETRY_DELAY));
+      return checkEmailVerification(retryCount + 1);
+    }
+  }
+}
+
+async function checkAppVersion(retryCount = 0) {
+  try {
+    const response = await axios.get(`${baseUrl}/api/version`);
+    if (response.data.version === appVersion) {
+      return true;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    if (retryCount < 5) { // Retry up to 5 times
+      await new Promise(res => setTimeout(res, RETRY_DELAY));
+      return checkAppVersion(retryCount + 1);
+    } else {
+      return false;
+    }
+  }
+}
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
@@ -68,67 +145,44 @@ export default function RootLayout() {
   });
 
   const [tokenExists, setTokenExists] = useState(false);
+  const [versionValid, setVersionValid] = useState(null);
+  const [loadingMessage, setLoadingMessage] = useState('');
 
   useEffect(() => {
-    const checkTokenExistence = async () => {
-      try {
-        const token = await AsyncStorage.getItem('authToken');
+    const initialize = async () => {
+      const tokenValid = await checkTokenExistence();
+      setTokenExists(tokenValid);
 
-        if (token) {
-          const response = await axios.get(`${baseUrl}/api/user/check-token`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
-          });
+      await checkEmailVerification(); // Email verification can be async but doesn't affect UI
 
-          if (response.data.success) {
-            setTokenExists(true);
-          } else {
-            await AsyncStorage.removeItem('authToken');
-            setTokenExists(false);
-          }
-        } else {
-          setTokenExists(false);
-        }
-      } catch (error) {
-        await AsyncStorage.removeItem('authToken');
-        setTokenExists(false);
+      const appVersionValid = await checkAppVersion();
+      if (appVersionValid) {
+        setVersionValid(true);
+        setLoadingMessage('');
+      } else {
+        setVersionValid(false);
+        setLoadingMessage('Please update the app.');
       }
     };
 
-    const checkEmailVerification = async () => {
-      try {
-        const token = await AsyncStorage.getItem('authToken');
-
-        if (token) {
-          const response = await axios.get(`${baseUrl}/api/user/check-email`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
-          });
-
-          if (response.data.success) {
-            await AsyncStorage.setItem('emailVerified', JSON.stringify(true));
-          } else {
-            await AsyncStorage.setItem('emailVerified', JSON.stringify(false));
-          }
-        }
-      } catch (error) {
-        await AsyncStorage.setItem('emailVerified', JSON.stringify(false));
-      }
-    };
-
-    const intervalTokenExistence = setInterval(checkTokenExistence, 2500);
-    const intervalEmailVerification = setInterval(checkEmailVerification, 5000);
-
-    checkTokenExistence();
-    checkEmailVerification();
-
-    return () => {
-      clearInterval(intervalTokenExistence);
-      clearInterval(intervalEmailVerification);
-    };
+    initialize();
   }, []);
+
+  if (!loaded || versionValid === null) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.message}>{loadingMessage}</Text>
+      </View>
+    );
+  }
+
+  if (!versionValid) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.message}>{loadingMessage}</Text>
+      </View>
+    );
+  }
 
   return (
     <Tab.Navigator screenOptions={{ headerShown: false }}>
@@ -167,7 +221,18 @@ export default function RootLayout() {
           />
         </>
       )}
-
     </Tab.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  message: {
+    fontSize: 16,
+    textAlign: 'center',
+  },
+});
