@@ -285,7 +285,7 @@ export default function Home() {
                             style={styles.categoryImage}
                           />
                           <Text style={styles.categoryName}>
-                            {translations[category.name]}
+                            {category.name}
                           </Text>
                         </View>
 
@@ -298,20 +298,20 @@ export default function Home() {
                                 onPress={() => handleServiceSelection(service)}
                               >
                                 <Text style={styles.serviceName}>
-                                  {translations[service.name] || service.name}
+                                  {service.name}
                                 </Text>
                                 <Text style={styles.serviceDescription}>
-                                  {translations[service.description] || service.description}
+                                  {service.description}
                                 </Text>
 
                                 <View style={styles.serviceDetails}>
                                   <View style={styles.servicePriceDuration}>
                                     <Text style={styles.servicePrice}>
-                                      {translations[service.price] || service.price}€
+                                      {service.price}€
                                     </Text>
 
                                     <Text style={styles.serviceDuration}>
-                                      {translations[service.duration] || service.duration} min
+                                      {service.duration} min
                                     </Text>
                                   </View>
                                 </View>
@@ -568,5 +568,8 @@ const styles = StyleSheet.create({
   },
   therapistDescription: {
     fontSize: 12,
+    flexWrap: 'wrap',
+    width: '95%',
+    color: Colors.gray.medium,
   },
 });

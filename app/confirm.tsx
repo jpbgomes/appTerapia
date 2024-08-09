@@ -353,7 +353,7 @@ export default function Confirm({ route }: any) {
       <SmallLogo size={100} style={styles.logoIcon} />
 
       <Calendar
-        current={'2024-07-01'}
+        // current={'2024-07-01'}
         minDate={new Date().toISOString().split('T')[0]}
         onDayPress={onDayPress}
         monthFormat={'MMMM yyyy'}
